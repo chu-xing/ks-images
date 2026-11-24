@@ -1,0 +1,41 @@
+name: mirror-kubesphere-images
+
+on:
+  workflow_dispatch:
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}
+
+      - name: Mirror images to GHCR
+        shell: bash
+        run: |
+          set -e
+          owner=${{ github.repository_owner }}
+          docker pull kubesphere/ks-apiserver:v4.1.3
+          docker pull kubesphere/ks-controller-manager:v4.1.3
+          docker pull kubesphere/ks-console:v4.1.3
+          docker pull kubesphere/ks-extensions-museum:latest
+          docker pull kubesphere/kubectl:v1.27.16
+
+          docker tag kubesphere/ks-apiserver:v4.1.3 ghcr.io/$owner/kubesphere/ks-apiserver:v4.1.3
+          docker tag kubesphere/ks-controller-manager:v4.1.3 ghcr.io/$owner/kubesphere/ks-controller-manager:v4.1.3
+          docker tag kubesphere/ks-console:v4.1.3 ghcr.io/$owner/kubesphere/ks-console:v4.1.3
+          docker tag kubesphere/ks-extensions-museum:latest ghcr.io/$owner/kubesphere/ks-extensions-museum:v1.1.5
+          docker tag kubesphere/kubectl:v1.27.16 ghcr.io/$owner/kubesphere/kubectl:v1.27.16
+
+          docker push ghcr.io/$owner/kubesphere/ks-apiserver:v4.1.3
+          docker push ghcr.io/$owner/kubesphere/ks-controller-manager:v4.1.3
+          docker push ghcr.io/$owner/kubesphere/ks-console:v4.1.3
+          docker push ghcr.io/$owner/kubesphere/ks-extensions-museum:v1.1.5
+          docker push ghcr.io/$owner/kubesphere/kubectl:v1.27.16
