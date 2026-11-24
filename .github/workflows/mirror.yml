@@ -1,15 +1,26 @@
-name: check-console
+name: mirror-console
 
 on:
   workflow_dispatch:
 
 jobs:
-  check:
+  mirror:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
-      - name: Check candidate tags
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}
+
+      - name: Mirror console to GHCR
         run: |
-          for repo in kubesphereio/ks-console kubespheredev/ks-console kubesphereon/ks-console; do
-            echo "===== $repo ====="
-            curl -s "https://hub.docker.com/v2/repositories/$repo/tags/?page_size=100" | python3 -c "import sys,json; d=json.load(sys.stdin); print('\n'.join(t['name'] for t in d.get('results',[])))" || true
-          done
+          set -e
+          owner=${{ github.repository_owner }}
+          docker pull kubesphereon/ks-console:v4.1.3
+          docker tag kubesphereon/ks-console:v4.1.3 ghcr.io/$owner/kubesphereon/ks-console:v4.1.3
+          docker push ghcr.io/$owner/kubesphereon/ks-console:v4.1.3
