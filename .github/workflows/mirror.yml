@@ -1,17 +1,15 @@
-name: find-console
+name: check-console
 
 on:
   workflow_dispatch:
 
 jobs:
-  search:
+  check:
     runs-on: ubuntu-latest
     steps:
-      - name: Search console images
+      - name: Check candidate tags
         run: |
-          echo "===== search ks-console ====="
-          docker search ks-console || true
-          echo "===== search kubesphere (console) ====="
-          docker search kubesphere --limit 100 | grep -i console || true
-          echo "===== search kubesphereio (console) ====="
-          docker search kubesphereio --limit 100 | grep -i console || true
+          for repo in kubesphereio/ks-console kubespheredev/ks-console kubesphereon/ks-console; do
+            echo "===== $repo ====="
+            curl -s "https://hub.docker.com/v2/repositories/$repo/tags/?page_size=100" | python3 -c "import sys,json; d=json.load(sys.stdin); print('\n'.join(t['name'] for t in d.get('results',[])))" || true
+          done
